@@ -12,6 +12,13 @@ export default defineConfig({
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),
+                // Fuentes del monitor: títulos y números
+                bunny('Space Grotesk', {
+                    weights: [400, 500, 700],
+                }),
+                bunny('JetBrains Mono', {
+                    weights: [400, 500, 700],
+                }),
             ],
         }),
         tailwindcss(),

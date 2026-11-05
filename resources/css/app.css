@@ -6,4 +6,24 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+    /* Paleta del monitor */
+    --color-ink: #07090d;
+    --color-panel: #0d1117;
+    --color-edge: #1c2330;
+    --color-muted: #6b7689;
+    --color-ok: #34d399;
+    --color-warn: #fbbf24;
+    --color-danger: #fb7185;
+    --color-signal: #22d3ee;
+}
+
+/* Fondo con cuadrícula tenue, estilo pantalla de control */
+.bg-grid {
+    background-image:
+        linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
 }
