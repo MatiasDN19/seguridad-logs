@@ -73,6 +73,16 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Canal de seguridad: registro de eventos independiente del log técnico.
+        // Genera storage/logs/security-AAAA-MM-DD.log y conserva 30 días.
+        'security' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/security.log'),
+            'level' => 'info',
+            'max_files' => 30, // equivale a 'days' => 30 del enunciado (clave de versiones anteriores)
+            'replace_placeholders' => true,
+        ],
+
         'monthly' => [
             'driver' => 'monthly',
             'path' => storage_path('logs/laravel.log'),

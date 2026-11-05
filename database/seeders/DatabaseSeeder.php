@@ -17,9 +17,17 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
+        // Admin de prueba: puede ver el panel de seguridad
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'is_admin' => true,
+        ]);
+
+        // Usuario común de prueba: puede loguearse pero NO ver el panel (403)
+        User::factory()->create([
+            'name' => 'Usuario Comun',
+            'email' => 'comun@example.com',
         ]);
     }
 }
