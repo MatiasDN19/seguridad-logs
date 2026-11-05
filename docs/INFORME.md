@@ -54,7 +54,7 @@ Se partió de la tabla vacía y un log nuevo. Todas las pruebas se hicieron en l
 | 3 | Tres fallos en cinco minutos | Alerta por posible fuerza bruta | ✅ En el 3.er fallo: `ALERT Posible ataque de fuerza bruta {"failed_attempts":3}` |
 | 4 | Cinco fallos en cinco minutos | Bloqueo 10 minutos y CRITICAL | ✅ En el 5.º fallo: `CRITICAL Bloqueo temporal por intentos fallidos {"duration_minutes":10}` |
 | 5 | Acceso mientras la IP está bloqueada | HTTP 429 y registro `blocked` | ✅ HTTP **429** aun con la contraseña correcta · `WARNING Intento desde IP bloqueada` · fila `blocked` |
-| 6 | Acceso tras vencer el bloqueo | Autenticación habilitada nuevamente | PENDIENTE |
+| 6 | Acceso tras vencer el bloqueo | Autenticación habilitada nuevamente | ✅ A las 04:30:34 (bloqueo desde 04:19:49): HTTP 200 `Autenticación correcta` · `INFO Inicio de sesión exitoso` |
 
 Además, las mismas pruebas están automatizadas en `tests/Feature/SecurityLoginTest.php`. La prueba 6 se automatiza adelantando el reloj 11 minutos con `$this->travel(11)->minutes()`. Se ejecutan con `php artisan test` (22 tests en total, todos pasan).
 
@@ -63,8 +63,20 @@ Además, las mismas pruebas están automatizadas en `tests/Feature/SecurityLogin
 Copia completa en [`evidencias/security-2026-11-05.log`](evidencias/security-2026-11-05.log).
 
 ```
-PENDIENTE
+[2026-11-05 04:19:45] local.INFO: Inicio de sesión exitoso {"user_id":1,"ip":"127.0.0.1"}                       ← prueba 1 (HTTP 200)
+[2026-11-05 04:19:46] local.WARNING: Autenticación fallida {"ip":"127.0.0.1","failed_attempts":1}                  ← prueba 2 (HTTP 401)
+[2026-11-05 04:19:46] local.WARNING: Autenticación fallida {"ip":"127.0.0.1","failed_attempts":2}                  ← prueba 2 (HTTP 401)
+[2026-11-05 04:19:47] local.WARNING: Autenticación fallida {"ip":"127.0.0.1","failed_attempts":3}                  ← prueba 3
+[2026-11-05 04:19:47] local.ALERT: Posible ataque de fuerza bruta {"ip":"127.0.0.1","failed_attempts":3}          ← prueba 3 (alerta)
+[2026-11-05 04:19:48] local.WARNING: Autenticación fallida {"ip":"127.0.0.1","failed_attempts":4}
+[2026-11-05 04:19:48] local.ALERT: Posible ataque de fuerza bruta {"ip":"127.0.0.1","failed_attempts":4}
+[2026-11-05 04:19:49] local.WARNING: Autenticación fallida {"ip":"127.0.0.1","failed_attempts":5}                  ← prueba 4
+[2026-11-05 04:19:49] local.CRITICAL: Bloqueo temporal por intentos fallidos {"ip":"127.0.0.1","failed_attempts":5,"duration_minutes":10}  ← prueba 4 (bloqueo)
+[2026-11-05 04:19:50] local.WARNING: Intento desde IP bloqueada {"ip":"127.0.0.1"}                                 ← prueba 5 (HTTP 429)
+[2026-11-05 04:30:34] local.INFO: Inicio de sesión exitoso {"user_id":1,"ip":"127.0.0.1"}                       ← prueba 6 (HTTP 200)
 ```
+
+Las pruebas 1 a 5 se ejecutaron antes de agregar la detección por cuenta (mejora 1); por eso el log no tiene eventos de cuenta. Esa mejora se verifica con sus tests automáticos.
 
 ## 4. Resultados de las consultas
 
@@ -116,7 +128,9 @@ GROUP BY ip_address HAVING COUNT(*) >= 3;
 | Usuario común (`comun@example.com`) | **403** |
 | Administrador (`test@example.com`) | 200 |
 
-<!-- CAPTURA DEL PANEL -->
+Captura tomada después de las pruebas (04:35 UTC), con fallos de demostración contra `demo@example.com` desde la misma IP: la IP aparece como **Crítico** (5 fallos, bloqueada) y la cuenta en **Alerta** por la detección por cuenta (mejora 1).
+
+![Panel de seguridad](capturas/security-dashboard.jpg)
 
 ## 6. Comparación con el TP sobre proyecto iniciado
 

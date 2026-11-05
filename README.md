@@ -101,4 +101,8 @@ Automatizan las pruebas obligatorias del enunciado (incluida la de "después de 
 
 ![Login](docs/capturas/login.jpg)
 
-<!-- CAPTURA DEL PANEL -->
+#### Panel de seguridad
+
+Demostración posterior a las pruebas: varios fallos seguidos contra `demo@example.com` desde la misma IP. La IP llega a 5 fallos y aparece como **Crítico** (bloqueada), y la cuenta aparece en **Alerta** por la detección por cuenta.
+
+![Panel de seguridad](docs/capturas/security-dashboard.jpg)

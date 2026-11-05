@@ -1,0 +1,11 @@
+[2026-11-05 04:19:45] local.INFO: Inicio de sesión exitoso {"user_id":1,"ip":"127.0.0.1"} 
+[2026-11-05 04:19:46] local.WARNING: Autenticación fallida {"ip":"127.0.0.1","failed_attempts":1} 
+[2026-11-05 04:19:46] local.WARNING: Autenticación fallida {"ip":"127.0.0.1","failed_attempts":2} 
+[2026-11-05 04:19:47] local.WARNING: Autenticación fallida {"ip":"127.0.0.1","failed_attempts":3} 
+[2026-11-05 04:19:47] local.ALERT: Posible ataque de fuerza bruta {"ip":"127.0.0.1","failed_attempts":3} 
+[2026-11-05 04:19:48] local.WARNING: Autenticación fallida {"ip":"127.0.0.1","failed_attempts":4} 
+[2026-11-05 04:19:48] local.ALERT: Posible ataque de fuerza bruta {"ip":"127.0.0.1","failed_attempts":4} 
+[2026-11-05 04:19:49] local.WARNING: Autenticación fallida {"ip":"127.0.0.1","failed_attempts":5} 
+[2026-11-05 04:19:49] local.CRITICAL: Bloqueo temporal por intentos fallidos {"ip":"127.0.0.1","failed_attempts":5,"duration_minutes":10} 
+[2026-11-05 04:19:50] local.WARNING: Intento desde IP bloqueada {"ip":"127.0.0.1"} 
+[2026-11-05 04:30:34] local.INFO: Inicio de sesión exitoso {"user_id":1,"ip":"127.0.0.1"} 
