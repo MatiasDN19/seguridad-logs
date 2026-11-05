@@ -23,6 +23,11 @@ Route::post('/security-logout', [SecurityLoginController::class, 'logout'])
     ->name('logout');
 
 // Panel de seguridad: requiere estar logueado Y ser admin (Gate viewSecurityDashboard)
-Route::get('/security-dashboard', [SecurityDashboardController::class, 'index'])
-    ->middleware(['auth', 'can:viewSecurityDashboard'])
-    ->name('security.dashboard');
+Route::middleware(['auth', 'can:viewSecurityDashboard'])->group(function () {
+    Route::get('/security-dashboard', [SecurityDashboardController::class, 'index'])
+        ->name('security.dashboard');
+
+    // Mejora: exportación de evidencias en CSV
+    Route::get('/security-dashboard/export', [SecurityDashboardController::class, 'export'])
+        ->name('security.export');
+});

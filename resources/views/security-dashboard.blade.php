@@ -21,6 +21,10 @@
             </div>
 
             <nav class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                <a href="{{ route('security.export') }}" class="inline-flex items-center gap-1.5 rounded-full border border-signal/40 bg-signal/10 px-3 py-1.5 text-signal transition hover:bg-signal/20">
+                    <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 3a1 1 0 0 1 1 1v7.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42L9 11.6V4a1 1 0 0 1 1-1Zm-6 13a1 1 0 0 1 1-1h10a1 1 0 1 1 0 2H5a1 1 0 0 1-1-1Z"/></svg>
+                    Exportar CSV
+                </a>
                 <a href="{{ route('home') }}" class="rounded-full border border-edge px-3 py-1.5 text-muted transition hover:border-slate-500 hover:text-white">Inicio</a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
@@ -89,6 +93,52 @@
                                     <span class="rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-widest
                                         {{ $critico ? 'border-danger/30 bg-danger/10 text-danger' : 'border-warn/30 bg-warn/10 text-warn' }}">
                                         {{ $critico ? 'Crítico' : 'Alerta' }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+        </section>
+
+        {{-- Cuentas atacadas (mejora: detección por cuenta) --}}
+        <section class="mt-4 rounded-2xl border border-edge bg-panel/80 p-6" aria-label="Cuentas atacadas">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 class="font-display text-lg font-medium text-white">Cuentas atacadas</h2>
+                <p class="font-mono text-xs text-muted">3 o más fallos contra la misma cuenta en 15 minutos, desde cualquier IP</p>
+            </div>
+
+            @if ($targetedAccounts->isEmpty())
+                <p class="mt-6 flex items-center gap-2 font-mono text-sm text-ok">
+                    <span class="size-2 rounded-full bg-ok"></span> Ninguna cuenta bajo ataque
+                </p>
+            @else
+                <table class="mt-4 w-full font-mono text-sm">
+                    <thead>
+                        <tr class="border-b border-edge text-left text-xs uppercase tracking-widest text-muted">
+                            <th class="py-3 font-medium">Cuenta (email)</th>
+                            <th class="py-3 font-medium">Fallos</th>
+                            <th class="py-3 font-medium">IPs distintas</th>
+                            <th class="py-3 text-right font-medium">Clasificación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($targetedAccounts as $acc)
+                            @php
+                                $critico = $acc->total >= 5;
+                                $distribuido = $acc->ips >= 2;
+                            @endphp
+                            <tr class="border-b border-edge/60 last:border-0">
+                                <td class="py-3 text-white">{{ $acc->identifier }}</td>
+                                <td class="py-3 tabular-nums">{{ $acc->total }}</td>
+                                <td class="py-3 tabular-nums {{ $distribuido ? 'text-warn' : '' }}">
+                                    {{ $acc->ips }}{{ $distribuido ? ' · distribuido' : '' }}
+                                </td>
+                                <td class="py-3 text-right">
+                                    <span class="rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-widest
+                                        {{ $critico ? 'border-danger/30 bg-danger/10 text-danger' : 'border-warn/30 bg-warn/10 text-warn' }}">
+                                        {{ $critico ? 'Bloqueada' : 'Alerta' }}
                                     </span>
                                 </td>
                             </tr>

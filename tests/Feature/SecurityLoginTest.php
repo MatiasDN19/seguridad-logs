@@ -85,13 +85,16 @@ class SecurityLoginTest extends TestCase
 
     public function test_el_bloqueo_de_una_ip_no_afecta_a_otra(): void
     {
-        $user = User::factory()->create();
+        $atacada = User::factory()->create();
+        $otro = User::factory()->create();
 
         for ($i = 1; $i <= 5; $i++) {
-            $this->attempt($user->email, 'incorrecta', '10.0.0.1');
+            $this->attempt($atacada->email, 'incorrecta', '10.0.0.1');
         }
 
-        $this->attempt($user->email, 'password', '10.0.0.2')->assertOk();
+        // Otra cuenta desde otra IP entra normalmente.
+        // (La cuenta atacada sigue bloqueada desde cualquier IP: eso lo cubre la detección por cuenta.)
+        $this->attempt($otro->email, 'password', '10.0.0.2')->assertOk();
     }
 
     public function test_despues_de_diez_minutos_vuelve_a_admitirse(): void
