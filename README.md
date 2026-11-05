@@ -1,58 +1,104 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Logging y detección de incidentes de seguridad en Laravel
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Trabajo práctico de **Programación IV** (UTN FRRe, cohorte 2026).
 
-## About Laravel
+Aplicación con un **login propio** que registra cada intento de autenticación en la base de datos y en un log de seguridad independiente, detecta intentos reiterados desde una IP, la bloquea temporalmente y muestra la evidencia en un panel solo para administradores.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+📄 **[Informe completo](docs/INFORME.md)**: pruebas, consultas, análisis y comparación con el TP sobre proyecto iniciado.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Reglas de detección
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Condición (por IP, 5 minutos) | Respuesta |
+|---|---|
+| Autenticación correcta | `INFO` y evento `success` · HTTP 200 |
+| 1–2 fallos | `WARNING` y evento `failed` · HTTP 401 |
+| 3–4 fallos | `ALERT` por posible fuerza bruta |
+| 5 fallos | Bloqueo de 10 minutos y `CRITICAL` |
+| IP bloqueada | HTTP 429 y evento `blocked` |
 
-## Learning Laravel
+### Mejoras (actividad integradora)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **Detección por cuenta:** también se cuentan los fallos contra la misma cuenta desde cualquier IP (15 minutos). Con 3 hay alerta y con 5 la cuenta se bloquea 10 minutos para todas las IPs. Detecta ataques distribuidos.
+- **Exportación de evidencias:** botón *Exportar CSV* en el panel, solo para administradores. Cada descarga queda registrada en el log.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Entorno usado
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+| | |
+|---|---|
+| Sistema operativo | Windows 11 Pro |
+| PHP | 8.3 |
+| Laravel | 13 |
+| Base de datos | SQLite |
 
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Cómo correrlo
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+npm install
+npm run build
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Abrir http://127.0.0.1:8000/security-login.
 
-## Contributing
+`--seed` crea dos usuarios de prueba (contraseña `password` en ambos):
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Usuario | Rol | Puede ver el panel |
+|---|---|---|
+| `test@example.com` | Administrador | Sí |
+| `comun@example.com` | Común | No (recibe 403) |
 
-## Code of Conduct
+### Rutas
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+| Ruta | Acceso | Qué hace |
+|---|---|---|
+| `GET /security-login` | Invitados | Formulario de login |
+| `POST /security-login` | Invitados | Autentica y aplica las reglas; responde JSON (200 / 401 / 429) |
+| `POST /security-logout` | Usuarios logueados | Cierra la sesión |
+| `GET /security-dashboard` | Solo administradores | Panel de seguridad |
+| `GET /security-dashboard/export` | Solo administradores | Descarga de evidencias en CSV |
 
-## Security Vulnerabilities
+### Logs
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+# Linux / Git Bash
+tail -f storage/logs/security-*.log
+grep -E "ALERT|CRITICAL" storage/logs/security-*.log
+```
 
-## License
+```powershell
+# PowerShell
+Get-Content storage\logs\security-*.log -Wait
+Select-String -Path storage\logs\security-*.log -Pattern "ALERT|CRITICAL"
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Tests
+
+```bash
+php artisan test
+```
+
+Automatizan las pruebas obligatorias del enunciado (incluida la de "después de 10 minutos", adelantando el reloj), los permisos del panel y las dos mejoras: 22 tests.
+
+## Estructura
+
+| Parte | Archivo |
+|---|---|
+| Canal de logs | `config/logging.php` (canal `security`) |
+| Tabla de auditoría | `database/migrations/..._create_login_attempts_table.php` |
+| Login y reglas | `app/Http/Controllers/SecurityLoginController.php` |
+| Panel | `app/Http/Controllers/SecurityDashboardController.php` |
+| Permiso | `app/Providers/AppServiceProvider.php` (Gate `viewSecurityDashboard`) |
+| Vistas | `resources/views/security-login.blade.php`, `security-dashboard.blade.php` |
+| Tests | `tests/Feature/SecurityLoginTest.php`, `tests/Feature/SecurityImprovementsTest.php` |
+
+## Capturas
+
+#### Login con respuesta del servidor
+
+![Login](docs/capturas/login.jpg)
+
+<!-- CAPTURA DEL PANEL -->
